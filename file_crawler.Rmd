@@ -10,6 +10,11 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
+print('hello')
+
+```
+
+```{r}
 #load libraries
 
 library(tidyverse)
@@ -18,30 +23,61 @@ library(tools)
 
 #get_data
 
-start_directory = "./data/raw_data/20200430/Clinical Data/diagnosis.sas7bdat"
+start_path = "../data/raw_data/20200430/Clinical Data/"
 
 #data info: mtime = modified time = will let us know if it's been processed or not
-file_info = file.info(start_directory)
-last_modified_time = file_info[,"mtime"]
+all_files <- list.files(start_path, full.names = TRUE, recursive = TRUE)
 
-#file_type
+file_inventory <- data.frame()
+
+for (file in all_files){ 
+  
+  file_infor <- file.info(file)
+  
+  file_infor$file_path <- file
+  
+  file_type <- file_ext(file)
+  
+  temp_df <- data.frame(file_path = file, file_type = file_type, stringsAsFactors = FALSE)
+  
+  file_inventory <- rbind(file_inventory, file_infor)
+  
+}
+
+file_inventory_type <- data.frame()
+
+for (file in all_files){ 
+  
+  file_type <- file_ext(file)
+  
+  temp_df <- data.frame(file_path = file, file_type = file_type, stringsAsFactors = FALSE)
+
+  file_inventory_type <- rbind(file_inventory_type, temp_df)
+  
+}
+
+file_inventory_updated <- file_inventory %>%
+    select('file_path', 'mtime') %>%
+    mutate(file_type = file_inventory_type[ , 'file_type'])
+
+
+```
+
+```{r}
+  #file_type
 file_type = file_ext("./data/raw_data/20200430/Clinical Data/diagnosis.sas7bdat")
 
 #file_size
 file_size = file_info[ , "size"]
 
-
-
 #load information into an inventory file
-file_inventory <- data.frame(file_info, file_type)
-  
+
 #behavioral, demographic
 #data_structure
 #whose_data/ which experiment
 #when was it collected? Title
 #categorical - in bins how big is the data
 ```
-
 
 ## Including Plots
 
