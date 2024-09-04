@@ -9,10 +9,6 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
-print('hello')
-
-```
 
 ```{r}
 #load libraries
@@ -28,6 +24,7 @@ start_path = "../data/raw_data/20200430/Clinical Data/"
 #data info: mtime = modified time = will let us know if it's been processed or not
 all_files <- list.files(start_path, full.names = TRUE, recursive = TRUE)
 
+#create inventory w/ modified time and file path information
 file_inventory <- data.frame()
 
 for (file in all_files){ 
@@ -36,13 +33,13 @@ for (file in all_files){
   
   file_infor$file_path <- file
   
-  file_type <- file_ext(file)
-  
-  temp_df <- data.frame(file_path = file, file_type = file_type, stringsAsFactors = FALSE)
   
   file_inventory <- rbind(file_inventory, file_infor)
   
 }
+
+#create inventory w/ exact type of file
+
 
 file_inventory_type <- data.frame()
 
@@ -79,12 +76,5 @@ file_size = file_info[ , "size"]
 #categorical - in bins how big is the data
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
