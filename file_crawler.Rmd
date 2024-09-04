@@ -1,0 +1,54 @@
+---
+title: "file_crawler"
+author: "Manogna"
+date: "2024-09-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#load libraries
+
+library(tidyverse)
+library(haven)
+library(tools)
+
+#get_data
+
+start_directory = "./data/raw_data/20200430/Clinical Data/diagnosis.sas7bdat"
+
+#data info: mtime = modified time = will let us know if it's been processed or not
+file_info = file.info(start_directory)
+last_modified_time = file_info[,"mtime"]
+
+#file_type
+file_type = file_ext("./data/raw_data/20200430/Clinical Data/diagnosis.sas7bdat")
+
+#file_size
+file_size = file_info[ , "size"]
+
+
+
+#load information into an inventory file
+file_inventory <- data.frame(file_info, file_type)
+  
+#behavioral, demographic
+#data_structure
+#whose_data/ which experiment
+#when was it collected? Title
+#categorical - in bins how big is the data
+```
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
