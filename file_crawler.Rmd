@@ -19,7 +19,7 @@ library(tools)
 
 #get_data
 
-start_path = "../data/raw_data/20200430/Clinical Data/"
+start_path = "../data/raw_data/20200430/"
 
 #data info: mtime = modified time = will let us know if it's been processed or not
 all_files <- list.files(start_path, full.names = TRUE, recursive = TRUE)
@@ -40,7 +40,6 @@ for (file in all_files){
 
 #create inventory w/ exact type of file
 
-
 file_inventory_type <- data.frame()
 
 for (file in all_files){ 
@@ -53,28 +52,20 @@ for (file in all_files){
   
 }
 
+file_inventory <-  file_inventory %>%
+  mutate(file_size = ifelse(size > 100000000, "greater than 1 GB", "less than 1GB"))
+
 file_inventory_updated <- file_inventory %>%
-    select('file_path', 'mtime') %>%
-    mutate(file_type = file_inventory_type[ , 'file_type'])
-
+    select('file_path', 'mtime', 'file_size') %>%
+    mutate(file_type = file_inventory_type[ , 'file_type']) %>%
+    mutate(file_name = basename(file_path),
+           folder_path = dirname(file_path),
+           folder_name = basename(folder_path)) %>%
+    select('folder_name','file_name', 'mtime','file_type', 'file_size')
 
 ```
 
-```{r}
-  #file_type
-file_type = file_ext("./data/raw_data/20200430/Clinical Data/diagnosis.sas7bdat")
 
-#file_size
-file_size = file_info[ , "size"]
-
-#load information into an inventory file
-
-#behavioral, demographic
-#data_structure
-#whose_data/ which experiment
-#when was it collected? Title
-#categorical - in bins how big is the data
-```
 
 
 
