@@ -5,26 +5,23 @@ date: "2024-09-04"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 
 ```{r}
-#load libraries
+#Load libraries
 
 library(tidyverse)
 library(haven)
 library(tools)
+library(data.table)
+library(parallel)
 
-#get_data
+#Get_data
 
-start_path = "../data/raw_data/20200430/"
+start_path = "../data/raw_data/20200430"
 
-#data info: mtime = modified time = will let us know if it's been processed or not
 all_files <- list.files(start_path, full.names = TRUE, recursive = TRUE)
 
-#create inventory w/ modified time and file path information
+#Create inventory w/ modified time and file path information
 file_inventory <- data.frame()
 
 for (file in all_files){ 
@@ -38,7 +35,7 @@ for (file in all_files){
   
 }
 
-#create inventory w/ exact type of file
+#Create inventory w/ exact type of file
 
 file_inventory_type <- data.frame()
 
@@ -52,8 +49,85 @@ for (file in all_files){
   
 }
 
+#Identify if file is greater than or less than 1 MB
 file_inventory <-  file_inventory %>%
   mutate(file_size = ifelse(size > 100000000, "greater than 1 GB", "less than 1GB"))
+
+
+
+```
+
+```{r}
+# Load required libraries
+library(parallel)
+library(data.table)
+library(haven)  # For reading SAS files
+library(tools)  # For file_ext()
+
+# Function to process each file
+process_file <- function(file) {
+  
+  # Extract file extension
+  file_type <- file_ext(file)
+  
+  # Check the file type and process accordingly
+  if (file_type == 'sas7bdat') {
+    file_test <- read_sas(file)  # Read the SAS file
+    
+    # Calculate the unique MRN count (assuming 'mrn' is in the first column)
+    unique_mrn_value <- uniqueN(file_test[[1]])
+    
+    # Return the results as a data.table
+    return(data.table(file = basename(file), unique_mrn_count = unique_mrn_value))
+  } else {
+    # If not a SAS file, return NA for unique_mrn_count
+    return(data.table(file = basename(file), unique_mrn_count = NA))
+  }
+}
+# Define the path where you want to save the CSV
+output_dir <- "./output_directory/"
+output_file <- paste0(output_dir, "file_inventory_updated.csv")
+
+# Create the directory if it doesn't exist
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir)
+}
+
+# Write the data frame to the specified file
+write.csv(file_inventory_updated, file = output_file, row.names = FALSE)
+
+# Get the number of cores available for parallel processing
+num_cores <- detectCores() - 1  # Use one less than the total number of cores
+
+# Create a cluster for parallel processing
+cl <- makeCluster(num_cores)
+
+# Ensure the necessary libraries and functions are available on each worker
+clusterEvalQ(cl, {
+  library(data.table)
+  library(haven)
+  library(tools)  # Required for file_ext()
+})
+
+# Export necessary variables and functions to the cluster
+clusterExport(cl, c("all_files", "process_file"))
+
+# Use parLapply to run the process_file function in parallel for each file
+file_results <- parLapply(cl, all_files, process_file)
+
+# Stop the cluster after processing
+stopCluster(cl)
+
+# Combine the results into a single data.table
+file_unique_mrn <- rbindlist(file_results)
+
+
+```
+
+
+```{r}
+
+#Append all information onto one single directory
 
 file_inventory_updated <- file_inventory %>%
     select('file_path', 'mtime', 'file_size') %>%
@@ -61,7 +135,21 @@ file_inventory_updated <- file_inventory %>%
     mutate(file_name = basename(file_path),
            folder_path = dirname(file_path),
            folder_name = basename(folder_path)) %>%
-    select('folder_name','file_name', 'mtime','file_type', 'file_size')
+    mutate(unique_mrn_count = file_unique_mrn[ , 'unique_mrn_count']) %>%
+    select('folder_name','file_name','unique_mrn_count', 'mtime','file_type', 'file_size')  
+
+
+# Define the path where you want to save the CSV
+output_dir <- "../data/processed_data/"
+output_file <- paste0(output_dir, "file_inventory_updated.csv")
+
+# Create the directory if it doesn't exist
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir)
+}
+
+# Write the data frame to the specified file
+write.csv(file_inventory_updated, file = output_file, row.names = FALSE)
 
 ```
 
