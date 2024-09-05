@@ -126,7 +126,6 @@ file_unique_mrn <- rbindlist(file_results)
 
 
 ```{r}
-
 #Append all information onto one single directory
 
 file_inventory_updated <- file_inventory %>%
@@ -136,8 +135,38 @@ file_inventory_updated <- file_inventory %>%
            folder_path = dirname(file_path),
            folder_name = basename(folder_path)) %>%
     mutate(unique_mrn_count = file_unique_mrn[ , 'unique_mrn_count']) %>%
-    select('folder_name','file_name','unique_mrn_count', 'mtime','file_type', 'file_size')  
+    select('folder_name','file_name','unique_mrn_count', 'mtime','file_type', 'file_size')
+```
 
+
+```{r}
+# Define the path where you want to save the CSV
+output_dir <- "../data/processed_data/"
+output_file <- paste0(output_dir, "file_inventory_updated.csv")
+
+# Create the directory if it doesn't exist
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir)
+}
+
+library(readr)  # For write_csv()
+
+# Convert the `unique_mrn_count` column to numeric if it's not already
+file_inventory_updated$unique_mrn_count <- sapply(file_inventory_updated$unique_mrn_count, function(x) {
+  if (is.list(x)) {
+    # Extract the numeric value if x is a list
+    return(as.numeric(x[[1]]))
+  } else {
+    # Convert directly if it's not a list
+    return(as.numeric(x))
+  }
+})
+
+# Convert `mtime` column to character format
+file_inventory_updated$mtime <- as.character(file_inventory_updated$mtime)
+
+# If `file_size` is a factor, convert it to a character
+file_inventory_updated$file_size <- as.character(file_inventory_updated$file_size)
 
 # Define the path where you want to save the CSV
 output_dir <- "../data/processed_data/"
@@ -148,10 +177,16 @@ if (!dir.exists(output_dir)) {
   dir.create(output_dir)
 }
 
-# Write the data frame to the specified file
+
 write.csv(file_inventory_updated, file = output_file, row.names = FALSE)
 
+
+
+# Confirm the file has been written
+print(paste("File saved to:", "file_inventory_updated.csv"))
+
 ```
+
 
 
 
