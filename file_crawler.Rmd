@@ -84,17 +84,7 @@ process_file <- function(file) {
     return(data.table(file = basename(file), unique_mrn_count = NA))
   }
 }
-# Define the path where you want to save the CSV
-output_dir <- "./output_directory/"
-output_file <- paste0(output_dir, "file_inventory_updated.csv")
 
-# Create the directory if it doesn't exist
-if (!dir.exists(output_dir)) {
-  dir.create(output_dir)
-}
-
-# Write the data frame to the specified file
-write.csv(file_inventory_updated, file = output_file, row.names = FALSE)
 
 # Get the number of cores available for parallel processing
 num_cores <- detectCores() - 1  # Use one less than the total number of cores
@@ -136,6 +126,10 @@ file_inventory_updated <- file_inventory %>%
            folder_name = basename(folder_path)) %>%
     mutate(unique_mrn_count = file_unique_mrn[ , 'unique_mrn_count']) %>%
     select('folder_name','file_name','unique_mrn_count', 'mtime','file_type', 'file_size')
+
+
+
+
 ```
 
 
